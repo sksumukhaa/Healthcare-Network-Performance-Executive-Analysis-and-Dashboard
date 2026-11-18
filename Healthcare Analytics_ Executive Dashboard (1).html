@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Healthcare Analytics: Executive Dashboard</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#EEF3F5;--panel:#fff;--ink:#12303B;--mute:#5B7480;--line:#DCE6EA;--teal:#0E7C86;--dim:#C6DADD;--blue:#2F5D9B;--coral:#D1495B;--hdr:#0F3D4A;--tint:#E6F3F4;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0C1A20;--panel:#13262E;--ink:#E4EEF1;--mute:#8FA8B2;--line:#223A44;--teal:#35B3BE;--dim:#2A4650;--blue:#6C9BE0;--coral:#EE7585;--hdr:#0A2A34;--tint:#183640}color-scheme:dark}
+:root[data-theme="dark"]{--bg:#0C1A20;--panel:#13262E;--ink:#E4EEF1;--mute:#8FA8B2;--line:#223A44;--teal:#35B3BE;--dim:#2A4650;--blue:#6C9BE0;--coral:#EE7585;--hdr:#0A2A34;--tint:#183640;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "IBM Plex Sans",system-ui,sans-serif}
+header{background:var(--hdr);color:#fff;padding:28px clamp(16px,4vw,48px) 24px}
+header h1{margin:0 0 4px;font-size:clamp(22px,3vw,30px);font-weight:600;letter-spacing:-.01em}
+header p{margin:0;color:#B9D3DA;max-width:70ch}
+.period{display:inline-block;margin-bottom:10px;padding:3px 12px;border-radius:99px;background:rgba(255,255,255,.12);font-size:13px}
+.bar{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin-top:20px}
+.bar label,.bar .fld{display:flex;flex-direction:column;gap:4px;font-size:12px;color:#B9D3DA}
+.bar select,.bar button{font:inherit;font-size:14px;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;min-width:170px}
+.bar select option{color:#12303B}
+.bar button{cursor:pointer;min-width:0;background:#fff;color:var(--hdr);font-weight:500}
+:focus-visible{outline:2px solid #7FD6DE;outline-offset:2px}
+.ms{position:relative}.ms summary{list-style:none;cursor:pointer;font-size:14px;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;min-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}
+.ms summary::-webkit-details-marker{display:none}
+.ms .opts{position:absolute;z-index:20;top:calc(100% + 4px);left:0;min-width:100%;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.ms .opts label{display:flex;flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-size:14px;padding:5px 8px;cursor:pointer;white-space:nowrap}
+main{padding:24px clamp(16px,4vw,48px) 56px;max-width:1360px;margin:0 auto}
+h2{font-size:17px;font-weight:600;margin:40px 0 14px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.kpi small{color:var(--mute);font-size:13px}
+.kpi b{display:block;font-size:28px;font-weight:600;margin:2px 0;letter-spacing:-.02em}
+.kpi span{font-size:12.5px;color:var(--mute)}
+.kpi.focus{border-color:var(--teal);background:var(--tint)}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.sum .card{border-left:4px solid var(--teal)}
+.sum .card:nth-child(4){border-left-color:var(--coral)}
+.sum h3{margin:0 0 4px;font-size:15px}.sum p{margin:0;color:var(--mute);font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:14px}
+.panel h3{margin:0;font-size:15px}
+.finding{margin:2px 0 12px;color:var(--mute);font-size:13.5px}
+.finding em{font-style:normal;color:var(--ink);font-weight:500}
+.chart{position:relative;height:250px}
+.imp{margin:12px 0 0;padding-top:10px;border-top:1px solid var(--line);font-size:13px;color:var(--mute)}
+.stat{font-size:40px;font-weight:600;letter-spacing:-.02em;margin:4px 0 0}
+.meter{height:10px;border-radius:9px;background:var(--dim);overflow:hidden;margin:10px 0}
+.meter i{display:block;height:100%;background:var(--coral)}
+.take{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.take .card h3{margin:0 0 10px;font-size:15px}
+.take dt{font-size:12.5px;color:var(--teal);font-weight:600;margin-top:8px}
+.take dd{margin:0;font-size:14px}
+@media (max-width:600px){.bar select,.bar button,.ms summary{width:100%;max-width:none}.bar label,.bar .fld{width:100%}}
+</style>
+</head>
+<body>
+<header>
+  <span class="period">Admissions: May 2019 – May 2024</span>
+  <h1>Healthcare Network Performance</h1>
+  <p>Patient volumes, billing and emergency demand across the network: what leadership needs to know.</p>
+  <div class="bar">
+    <div class="fld">Medical condition<details class="ms" id="fCond"><summary></summary><div class="opts"></div></details></div>
+    <div class="fld">Insurance provider<details class="ms" id="fIns"><summary></summary><div class="opts"></div></details></div>
+    <div class="fld">Age group<details class="ms" id="fAge"><summary></summary><div class="opts"></div></details></div>
+    <label>Period from<select id="dFrom"></select></label>
+    <label>Period to<select id="dTo"></select></label>
+    <button id="reset" type="button">Reset filters</button>
+  </div>
+</header>
+<main>
+  <section class="kpis" aria-label="Key metrics" id="kpis"></section>
+
+  <h2>Executive summary</h2>
+  <section class="sum">
+    <div class="card"><h3>Demand is balanced</h3><p>All six conditions draw 9,095–9,218 patients each. No single condition needs priority capacity.</p></div>
+    <div class="card"><h3>Costs are stable across patient groups</h3><p>Average billing stays near $25.6K for every age group, with a spread of about 4%.</p></div>
+    <div class="card"><h3>Payer mix is evenly split</h3><p>Five insurers each cover 19.7%–20.3% of patients. No dependence on one payer.</p></div>
+    <div class="card"><h3>One in three admissions is an emergency</h3><p>18,102 emergency admissions, and a third of them return abnormal test results.</p></div>
+    <div class="card"><h3>High-cost cases are a small tail</h3><p>5,497 admissions (10%) sit in the top decile of billing and merit review.</p></div>
+  </section>
+
+  <h2>Key business insights</h2>
+  <section class="grid">
+    <div class="panel"><h3>Patients by medical condition</h3>
+      <p class="finding"><em>Arthritis</em> leads with 9,218 patients, only 1.3% above Asthma at the low end.</p>
+      <div class="chart"><canvas id="cCond" role="img" aria-label="Patients by medical condition"></canvas></div>
+      <p class="imp">Implication: staff specialists evenly. Past volumes do not favour any one condition.</p></div>
+    <div class="panel"><h3>Patients by age group</h3>
+      <p class="finding">Ages 20–80 each hold about 8,000 patients. <em>Under 20 and over 80</em> are the smallest groups.</p>
+      <div class="chart"><canvas id="cAge" role="img" aria-label="Patients by age group"></canvas></div>
+      <p class="imp">Implication: the patient base is broad, with no age-driven demand spike.</p></div>
+    <div class="panel"><h3>Average billing by age group</h3>
+      <p class="finding"><em>Ages 10–20</em> are highest at $26,368; <em>80–90</em> lowest at $25,349.</p>
+      <div class="chart"><canvas id="cAgeBill" role="img" aria-label="Average billing by age group"></canvas></div>
+      <p class="imp">Implication: age is not a meaningful driver of cost per admission.</p></div>
+    <div class="panel"><h3>Patients by insurance provider</h3>
+      <p class="finding"><em>Cigna</em> covers the most patients (20.3%), just ahead of Medicare and UnitedHealthcare.</p>
+      <div class="chart"><canvas id="cIns" role="img" aria-label="Patients by insurance provider"></canvas></div>
+      <p class="imp">Implication: payer risk is diversified; negotiate with all five on equal footing.</p></div>
+    <div class="panel" style="grid-column:1/-1"><h3>Average billing per admission over time</h3>
+      <p class="finding">Monthly averages stay within about <em>$24.5K–$26.8K</em> around the $25.6K network average, May 2019 – May 2024.</p>
+      <p class="finding" id="tNote"></p>
+      <div class="chart"><canvas id="cTime" role="img" aria-label="Average monthly billing"></canvas></div>
+      <p class="imp">Implication: treatment cost per admission is flat, with no sustained rise or fall to plan around.</p></div>
+  </section>
+
+  <h2>Additional insights</h2>
+  <section class="grid">
+    <div class="panel" style="grid-column:1/-1"><h3>Emergency admissions by month</h3>
+      <p class="finding"><em>July</em> is the busiest month (1,573); <em>February</em> the quietest (1,452), an 8% gap.</p>
+      <div class="chart"><canvas id="cEmerg" role="img" aria-label="Emergency admissions by calendar month"></canvas></div>
+      <p class="imp">Implication: emergency staffing can stay near-constant year-round, with a modest buffer for mid-summer.</p></div>
+    <div class="panel"><h3>High-cost cases</h3>
+      <div class="stat">5,497</div>
+      <p class="finding">Admissions above the 90th percentile of billing: <em>10.0%</em> of all admissions.</p>
+      <p class="imp">Implication: a concentrated group worth reviewing for cost drivers and authorisation.</p></div>
+    <div class="panel"><h3>Emergencies with abnormal results</h3>
+      <div class="stat">6,038</div>
+      <div class="meter" title="33.4% of emergency admissions"><i style="width:33.4%"></i></div>
+      <p class="finding"><em>33.4%</em> of emergency admissions, or 11.0% of all admissions.</p>
+      <p class="imp">Implication: a sizeable group needing follow-up care and higher-acuity resources.</p></div>
+  </section>
+
+  <h2>Management takeaways</h2>
+  <section class="take">
+    <div class="card"><h3>Balanced demand</h3><dl>
+      <dt>What is happening</dt><dd>Patients spread evenly across conditions, ages and insurers.</dd>
+      <dt>Why it matters</dt><dd>No single segment drives volume or revenue risk.</dd>
+      <dt>Pay attention to</dt><dd>Keep capacity balanced; avoid over-investing in one specialty.</dd></dl></div>
+    <div class="card"><h3>Flat cost profile</h3><dl>
+      <dt>What is happening</dt><dd>Average billing is about $25.6K regardless of age or month.</dd>
+      <dt>Why it matters</dt><dd>Budgets and forecasts are predictable.</dd>
+      <dt>Pay attention to</dt><dd>The 5,497 high-cost cases, where cost control matters most.</dd></dl></div>
+    <div class="card"><h3>Emergency load</h3><dl>
+      <dt>What is happening</dt><dd>33% of admissions are emergencies; one in three has abnormal results.</dd>
+      <dt>Why it matters</dt><dd>These patients need the most urgent, resource-heavy care.</dd>
+      <dt>Pay attention to</dt><dd>Steady emergency staffing with a mid-summer buffer.</dd></dl></div>
+  </section>
+</main>
+<script>
+const N=54966, AVG=25594.633637;
+const cond={Arthritis:9218,Diabetes:9216,Hypertension:9151,Obesity:9146,Cancer:9140,Asthma:9095};
+const ins={Cigna:11139,Medicare:11039,UnitedHealthcare:11014,"Blue Cross":10952,Aetna:10822};
+const age={"10-20":1677,"20-30":7928,"30-40":8105,"40-50":8045,"50-60":8263,"60-70":8099,"70-80":7999,"80-90":4850};
+const ageBill={"10-20":26367.64,"20-30":25463.40,"30-40":25739.08,"40-50":25515.18,"50-60":25577.80,"60-70":25636.99,"70-80":25619.89,"80-90":25348.57};
+const tm=[];for(let k=0;k<61;k++){const d=new Date(2019,4+k,1);tm.push(d.toLocaleString("en-US",{month:"short"})+" "+d.getFullYear())}
+const tv=[25897.82,26324.12,25928.66,25457.26,24915.55,25995.12,25901.06,25686.65,25861.02,25341.36,25538,25222,25599,26049,24810,25527,24883,25044,25349,26222,25544,25633,26077,25777,25038,26105,25744,25544,25194,26805,25672,24994,25561,24827,25855,25705,25594,25283,25883,25116,25716,25799,26355,25260,26044,25505,24471,25611,24760,26099,25155,25616,25699,26761,25561,26105,25838,25705,25310,24927,25466];
+const em=[1547,1452,1528,1473,1533,1483,1573,1533,1500,1490,1462,1528];
+const mo=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const $=id=>document.getElementById(id), fmt=n=>Math.round(n).toLocaleString("en-US"), usd=n=>"$"+fmt(n);
+const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const emTot=em.reduce((a,b)=>a+b,0);
+const sel={fCond:["All conditions",cond],fIns:["All providers",ins],fAge:["All age groups",age]};
+const picked=id=>[...$(id).querySelectorAll("input:checked")].map(x=>x.value);
+function clearSel(id){$(id).querySelectorAll("input").forEach(x=>x.checked=false);$(id).querySelector("summary").textContent=sel[id][0]}
+for(const id in sel){const d=$(id);d.querySelector("summary").textContent=sel[id][0];
+  d.querySelector(".opts").innerHTML=Object.keys(sel[id][1]).map(k=>`<label><input type="checkbox" value="${k}"> ${k}</label>`).join("");
+  d.onchange=()=>{for(const o in sel)if(o!==id)clearSel(o);const p=picked(id);d.querySelector("summary").textContent=p.length?(p.length>2?p.length+" selected":p.join(", ")):sel[id][0];render()}}
+document.addEventListener("click",e=>document.querySelectorAll(".ms[open]").forEach(d=>{if(!d.contains(e.target))d.open=false}));
+["dFrom","dTo"].forEach((id,n)=>{const s=$(id);tm.forEach((m,x)=>s.add(new Option(m,x)));s.value=n?tm.length-1:0;
+  s.onchange=()=>{if(+$("dFrom").value>+$("dTo").value)(id==="dFrom"?$("dTo"):$("dFrom")).value=s.value;render()}});
+$("reset").onclick=()=>{for(const o in sel)clearSel(o);$("dFrom").value=0;$("dTo").value=tm.length-1;render()};
+const charts={};
+function mk(id,type,labels,data,extra={}){
+  const c=new Chart($(id),{type,data:{labels,datasets:[{data,borderRadius:type==="bar"?4:0,...extra}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:type==="doughnut",position:"right"},
+  tooltip:{callbacks:{label:c=>" "+(id==="cAgeBill"||id==="cTime"?usd(c.parsed.y):fmt(type==="doughnut"?c.parsed:c.parsed.y)+" "+(type==="doughnut"?"patients ("+(c.parsed/N*100).toFixed(1)+"%)":"admissions"))}}},
+  scales:type==="doughnut"?{}:{x:{grid:{display:false}},y:{beginAtZero:id!=="cTime"&&id!=="cAgeBill",grid:{color:css("--line")},
+  ...(id==="cTime"?{min:24200,max:27000}:{}),...(id==="cAgeBill"?{min:24000,max:27000}:{})}}}});
+  charts[id]=c;return c}
+function shade(keys,chosen,full){return keys.map(k=>!chosen.length||chosen.includes(k)?full:css("--dim"))}
+function render(){
+  const [c,i,a]=["fCond","fIns","fAge"].map(picked);
+  const t=css("--teal"),b=css("--blue");
+  Chart.defaults.color=css("--mute");Chart.defaults.font.family='"IBM Plex Sans",system-ui,sans-serif';
+  let label="Network total",count=N,focus=false;
+  const sum=(o,ks)=>ks.reduce((s,k)=>s+o[k],0),lab=ks=>ks.length>2?ks.length+" selected":ks.join(", ");
+  if(c.length){count=sum(cond,c);label=lab(c);focus=true}else if(i.length){count=sum(ins,i);label=lab(i);focus=true}else if(a.length){count=sum(age,a);label="Ages "+lab(a);focus=true}
+  const avg=a.length?a.reduce((s,k)=>s+age[k]*ageBill[k],0)/count:AVG;
+  $("kpis").innerHTML=[
+   [focus?"Admissions: "+label:"Total admissions",fmt(count),focus?"Selected segment":"Unique patient records",focus],
+   ["Insurance providers","5","Each covers 19.7%–20.3% of patients",false],
+   ["Total billing","≈ $1.41B","Network total (admissions × average)",false],
+   ["Average billing",usd(avg),a.length?"Ages "+lab(a)+" (weighted)":"Per admission, network",a.length>0],
+   ["Median patient age","52","Range 13–89 years",false],
+   ["Emergency admissions",fmt(emTot),(emTot/N*100).toFixed(1)+"% of admissions · network",false]
+  ].map(k=>`<div class="card kpi${k[3]?" focus":""}"><small>${k[0]}</small><b>${k[1]}</b><span>${k[2]}</span></div>`).join("");
+  if(!charts.cCond){
+   mk("cCond","bar",Object.keys(cond),Object.values(cond),{backgroundColor:t});
+   mk("cAge","bar",Object.keys(age),Object.values(age),{backgroundColor:t});
+   mk("cAgeBill","bar",Object.keys(ageBill),Object.values(ageBill),{backgroundColor:b});
+   mk("cIns","doughnut",Object.keys(ins),Object.values(ins),{backgroundColor:[t,b,"#7A6FB5","#E0A33A","#D1495B"],borderWidth:2,borderColor:css("--panel")});
+   mk("cTime","line",tm,tv,{borderColor:t,backgroundColor:t,tension:.25,pointRadius:2.5});
+   mk("cEmerg","bar",mo,em,{backgroundColor:t});
+  }
+  charts.cCond.data.datasets[0].backgroundColor=shade(Object.keys(cond),c,t);
+  charts.cAge.data.datasets[0].backgroundColor=shade(Object.keys(age),a,t);
+  charts.cAgeBill.data.datasets[0].backgroundColor=shade(Object.keys(ageBill),a,b);
+  const pal=[t,b,"#7A6FB5","#E0A33A","#D1495B"];
+  charts.cIns.data.datasets[0].backgroundColor=Object.keys(ins).map((k,x)=>!i.length||i.includes(k)?pal[x]:css("--dim"));
+  charts.cEmerg.data.datasets[0].backgroundColor=em.map((v,x)=>x===6?css("--coral"):t);
+  const d0=+$("dFrom").value,d1=+$("dTo").value+1,sl=tv.slice(d0,d1);
+  charts.cTime.data.labels=tm.slice(d0,d1);charts.cTime.data.datasets[0].data=sl;
+  $("tNote").textContent="Selected period: "+tm[d0]+" – "+tm[d1-1]+" · average "+usd(sl.reduce((x,y)=>x+y,0)/sl.length)+(d1>10?" · values after Feb 2020 are approximate":"");
+  Object.values(charts).forEach(ch=>ch.update());
+}
+render();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>location.reload());
+</script>
+</body>
+</html>
